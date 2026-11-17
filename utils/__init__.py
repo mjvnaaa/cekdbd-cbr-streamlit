@@ -1,0 +1,1 @@
+"""Fungsi utilitas pendukung aplikasi."""
