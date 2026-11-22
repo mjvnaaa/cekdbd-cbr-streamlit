@@ -6,13 +6,24 @@ Identitas hanya dipakai untuk menampilkan laporan, bukan untuk perhitungan.
 
 import streamlit as st
 
-from core.cbr import buat_kasus_baru, hitung_cbr, kasus_terbaik, urutkan_hasil
+from core.basis_kasus import muat_basis
+from core.cbr import (
+    buat_kasus_baru,
+    hitung_cbr,
+    kasus_terbaik,
+    reuse,
+    urutkan_hasil,
+)
 from . import layout, theme
 from utils.validation import (
     validasi_pasien,
     validasi_pilihan_gejala,
     validasi_vektor,
 )
+
+
+# Kunci widget tahap Revise; dibersihkan setiap kali ada hasil baru.
+KUNCI_REVISI = ["revisi_grade", "revisi_catatan"]
 
 
 def _kunci_gejala(kode):
@@ -43,7 +54,7 @@ def init_state(dataset):
 def reset_state(dataset):
     """Mengosongkan seluruh input dan kembali ke halaman awal."""
 
-    for kunci in ["nama", "usia", "jk", "pasien", "pilih", "hasil"]:
+    for kunci in ["nama", "usia", "jk", "pasien", "pilih", "hasil"] + KUNCI_REVISI:
         st.session_state.pop(kunci, None)
 
     for atribut in dataset.atribut:
@@ -63,18 +74,29 @@ def kumpulkan_gejala(dataset):
 
 
 def _simpan_hasil(dataset, pilih):
-    """Menghitung dan menyimpan hasil di session state."""
+    """Menjalankan Retrieve + Reuse dan menyimpan hasilnya di session state."""
 
+    # Retrieve membandingkan kasus baru dengan seluruh basis kasus:
+    # kasus rujukan awal + kasus yang pernah disimpan lewat Retain.
+    basis = muat_basis(dataset)
     kasusbaru = buat_kasus_baru(pilih, dataset.atribut)
-    validasi_vektor(kasusbaru, dataset.kasus_lama, dataset.jumlah_atribut)
+    validasi_vektor(kasusbaru, basis, dataset.jumlah_atribut)
 
-    hasil = hitung_cbr(kasusbaru, dataset.kasus_lama)
+    hasil = hitung_cbr(kasusbaru, basis)
+
+    for kunci in KUNCI_REVISI:
+        st.session_state.pop(kunci, None)
+
     st.session_state["pilih"] = pilih
     st.session_state["hasil"] = {
         "kasusbaru": kasusbaru,
         "hasil": hasil,
         "ranking": urutkan_hasil(hasil),
         "terbaik": kasus_terbaik(hasil),
+        "usulan": reuse(hasil),
+        "jumlah_basis": len(basis),
+        "revisi": None,
+        "retain": None,
     }
     st.session_state["langkah"] = "hasil"
     st.rerun()

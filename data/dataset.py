@@ -1,13 +1,5 @@
-"""Dataset resmi proyek.
-
-Dataset DHF disalin dari ``js/data.js`` (nama gejala asli dari Jatmiko dkk., 2017).
-Dataset P006 disalin dari kode Python yang diberikan pengguna. Karena kode sumber
-tidak menyediakan nama atribut untuk P006, atributnya diberi kode F1 sampai F19.
-Tidak ada nama gejala P006 yang dikarang di sini.
-"""
-
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Tuple
 
 
 @dataclass(frozen=True)
@@ -16,66 +8,113 @@ class Dataset:
     nama: str
     judul: str
     deskripsi: str
-    atribut: List[Dict[str, Any]]
-    kasus_lama: List[Dict[str, Any]]
+    kode_atribut: List[str]
+    nama_atribut: List[str]
+    kode_kasus: List[str]
+    nama_kasus: List[str]
+    vektor_kasus: List[List[int]]
     contoh_kasus_baru: List[int]
-    tipe_input: str = "binary"
-    nilai_opsi: Tuple[int, ...] = (0, 1)
-    label_nilai: Dict[int, str] = field(default_factory=dict)
-    sumber: str = ""
+    tipe_input: str
+    nilai_opsi: Tuple[int, ...]
+    label_nilai: Dict[int, str]
+    sumber: str
 
     @property
     def jumlah_atribut(self) -> int:
-        return len(self.atribut)
+        return len(self.kode_atribut)
 
     @property
     def jumlah_kasus(self) -> int:
-        return len(self.kasus_lama)
+        return len(self.kode_kasus)
+
+    @property
+    def atribut(self) -> List[dict]:
+        """Atribut sebagai daftar dict ``{"kode", "nama"}`` (dipakai komponen UI)."""
+        return [
+            {"kode": kode, "nama": nama}
+            for kode, nama in zip(self.kode_atribut, self.nama_atribut)
+        ]
+
+    @property
+    def kasus_lama(self) -> List[dict]:
+        """Kasus rujukan awal sebagai daftar dict ``{"kode", "nama", "vektor"}``."""
+        return [
+            {"kode": kode, "nama": nama, "vektor": list(vektor)}
+            for kode, nama, vektor in zip(
+                self.kode_kasus, self.nama_kasus, self.vektor_kasus
+            )
+        ]
 
 
-# ===== DATASET DHF (14 atribut, nilai 0/1) =====
-# Sumber: js/data.js -> GEJALA dan KASUS_LAMA
-GEJALA = [
-    {"kode": "G1", "nama": "Demam"},
-    {"kode": "G2", "nama": "Mual"},
-    {"kode": "G3", "nama": "Muntah"},
-    {"kode": "G4", "nama": "Lemas"},
-    {"kode": "G5", "nama": "Mencret"},
-    {"kode": "G6", "nama": "Kejang"},
-    {"kode": "G7", "nama": "Tenggorokan Sakit"},
-    {"kode": "G8", "nama": "Bintik Merah"},
-    {"kode": "G9", "nama": "Mimisan"},
-    {"kode": "G10", "nama": "Nyeri Sendi"},
-    {"kode": "G11", "nama": "Pusing"},
-    {"kode": "G12", "nama": "Leukosit"},
-    {"kode": "G13", "nama": "Hematokrit"},
-    {"kode": "G14", "nama": "Trombosit"},
+# ============================================================
+# DATASET DHF
+# ============================================================
+
+KODE_GEJALA_DHF = [
+    "G1", "G2", "G3", "G4", "G5", "G6", "G7",
+    "G8", "G9", "G10", "G11", "G12", "G13", "G14",
 ]
 
-KASUS_LAMA_DHF = [
-    {
-        "kode": "DHF1",
-        "nama": "Demam Berdarah Grade I",
-        "vektor": [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1],
-    },
-    {
-        "kode": "DHF2",
-        "nama": "Demam Berdarah Grade II",
-        "vektor": [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1],
-    },
-    {
-        "kode": "DHF3",
-        "nama": "Demam Berdarah Grade III",
-        "vektor": [1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1],
-    },
-    {
-        "kode": "DHF4",
-        "nama": "Demam Berdarah Grade IV",
-        "vektor": [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1],
-    },
+NAMA_GEJALA_DHF = [
+    "Demam", "Mual", "Muntah", "Lemas", "Mencret",
+    "Kejang", "Tenggorokan Sakit", "Bintik Merah",
+    "Mimisan", "Nyeri Sendi", "Pusing", "Leukosit",
+    "Hematokrit", "Trombosit",
 ]
 
-KASUSBARU_DHF_CONTOH = [1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1]
+KODE_KASUS_DHF = ["DHF1", "DHF2", "DHF3", "DHF4"]
+
+NAMA_KASUS_DHF = [
+    "Demam Berdarah Grade I",
+    "Demam Berdarah Grade II",
+    "Demam Berdarah Grade III",
+    "Demam Berdarah Grade IV",
+]
+
+VEKTOR_KASUS_DHF = [
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1],
+]
+
+KASUSBARU_DHF = [
+    1, 1, 0, 0, 1, 0, 0,
+    1, 1, 0, 0, 1, 1, 1,
+]
+
+
+# ============================================================
+# DATASET P006
+# ============================================================
+
+KODE_ATRIBUT_P006 = [f"F{i}" for i in range(1, 20)]
+NAMA_ATRIBUT_P006 = [f"Fitur {i}" for i in range(1, 20)]
+
+KODE_KASUS_P006 = ["P001", "P002", "P003", "P004", "P005"]
+
+NAMA_KASUS_P006 = [
+    "Gastritis", "Maag", "Kanker Lambung",
+    "Tumor Lambung", "GERD",
+]
+
+VEKTOR_KASUS_P006 = [
+    [0, 0, 0, 0, 0, 0, 0, 3, 1, 5, 1, 0, 0, 0, 0, 5, 0, 0, 0],
+    [1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0],
+    [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 3, 5, 0, 0, 5, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 5, 5, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+]
+
+KASUSBARU_P006 = [
+    0, 0, 0, 0, 0, 1, 1, 0, 1, 0,
+    1, 0, 0, 0, 0, 0, 0, 1, 0,
+]
+
+
+# ============================================================
+# DATASET DEFINITIONS
+# ============================================================
 
 DHF = Dataset(
     key="dhf",
@@ -85,51 +124,17 @@ DHF = Dataset(
         "Empat kasus rujukan grade DHF dengan 14 gejala biner. "
         "Nilai 1 berarti gejala ada, 0 berarti tidak ada."
     ),
-    atribut=GEJALA,
-    kasus_lama=KASUS_LAMA_DHF,
-    contoh_kasus_baru=KASUSBARU_DHF_CONTOH,
+    kode_atribut=KODE_GEJALA_DHF,
+    nama_atribut=NAMA_GEJALA_DHF,
+    kode_kasus=KODE_KASUS_DHF,
+    nama_kasus=NAMA_KASUS_DHF,
+    vektor_kasus=VEKTOR_KASUS_DHF,
+    contoh_kasus_baru=KASUSBARU_DHF,
     tipe_input="binary",
     nilai_opsi=(0, 1),
     label_nilai={0: "Tidak ada", 1: "Ada"},
     sumber="js/data.js; Jatmiko, Junaedi, dan Imrona (2017), Tabel 2-1 sampai 2-3.",
 )
-
-
-# ===== DATASET P006 (19 atribut, bobot 0/1/3/5) =====
-# Sumber: kode Python "kasus baru P006" yang diberikan pengguna.
-P006_ATRIBUT = [
-    {"kode": f"F{i}", "nama": f"Fitur {i}"} for i in range(1, 20)
-]
-
-KASUS_LAMA_P006 = [
-    {
-        "kode": "P001",
-        "nama": "Gastritis",
-        "vektor": [0, 0, 0, 0, 0, 0, 0, 3, 1, 5, 1, 0, 0, 0, 0, 5, 0, 0, 0],
-    },
-    {
-        "kode": "P002",
-        "nama": "Maag",
-        "vektor": [1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0],
-    },
-    {
-        "kode": "P003",
-        "nama": "Kanker Lambung",
-        "vektor": [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 3, 5, 0, 0, 5, 0, 1, 0, 0],
-    },
-    {
-        "kode": "P004",
-        "nama": "Tumor Lambung",
-        "vektor": [0, 0, 0, 0, 0, 5, 5, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0],
-    },
-    {
-        "kode": "P005",
-        "nama": "GERD",
-        "vektor": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
-    },
-]
-
-KASUSBARU_P006_CONTOH = [0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0]
 
 P006 = Dataset(
     key="p006",
@@ -137,25 +142,33 @@ P006 = Dataset(
     judul="Kemiripan Kasus P006",
     deskripsi=(
         "Lima kasus lama penyakit lambung dengan 19 atribut berbobot. "
-        "Kasus baru contoh memakai nilai 0/1, sedangkan kasus lama memakai 0/1/3/5. "
-        "Nama atribut tidak tersedia di kode sumber, sehingga ditampilkan sebagai F1-F19."
+        "Kasus baru contoh memakai nilai 0/1, sedangkan kasus lama "
+        "memakai 0/1/3/5. Nama atribut tidak tersedia di kode sumber, "
+        "sehingga ditampilkan sebagai F1-F19."
     ),
-    atribut=P006_ATRIBUT,
-    kasus_lama=KASUS_LAMA_P006,
-    contoh_kasus_baru=KASUSBARU_P006_CONTOH,
+    kode_atribut=KODE_ATRIBUT_P006,
+    nama_atribut=NAMA_ATRIBUT_P006,
+    kode_kasus=KODE_KASUS_P006,
+    nama_kasus=NAMA_KASUS_P006,
+    vektor_kasus=VEKTOR_KASUS_P006,
+    contoh_kasus_baru=KASUSBARU_P006,
     tipe_input="bobot",
     nilai_opsi=(0, 1, 3, 5),
     label_nilai={0: "0", 1: "1", 3: "3", 5: "5"},
     sumber="Kode Python P006 yang diberikan pengguna (tanpa daftar nama atribut).",
 )
 
+
+# ============================================================
+# DATASET REGISTRY
+# ============================================================
+
 DAFTAR_DATASET = [DHF, P006]
 
 
 def get_dataset(key):
-    """Mengambil dataset berdasarkan kunci."""
-
     for dataset in DAFTAR_DATASET:
         if dataset.key == key:
             return dataset
+
     raise KeyError(f"Dataset '{key}' tidak ditemukan.")

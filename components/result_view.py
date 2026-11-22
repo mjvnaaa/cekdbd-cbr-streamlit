@@ -4,6 +4,8 @@ import datetime
 
 import streamlit as st
 
+from core.basis_kasus import retain
+from core.cbr import revise
 from . import layout, theme
 
 
@@ -52,11 +54,21 @@ def _lembar_laporan(state, dataset, pasien):
 
     kasus_per_kode = {k["kode"]: k for k in dataset.kasus_lama}
 
+    # Basis kasus dapat berisi kasus hasil Retain. Grafik menampilkan satu
+    # batang per grade rujukan: kemiripan tertinggi di antara kasus bergrade itu.
+    terbaik_per_grade = {}
+    for item in daftar:
+        sebelumnya = terbaik_per_grade.get(item["nama"])
+        if sebelumnya is None or item["cosine"] > sebelumnya["cosine"]:
+            terbaik_per_grade[item["nama"]] = item
+
     skala = ""
     kolom = ""
-    for item in daftar:
-        kasus = kasus_per_kode.get(item["kode"], item)
-        puncak = cocok and item["kode"] == terbaik["kode"]
+    for kasus in dataset.kasus_lama:
+        item = terbaik_per_grade.get(kasus["nama"])
+        if item is None:
+            continue
+        puncak = cocok and kasus["nama"] == terbaik["nama"]
         kelas = "on" if puncak else ""
         skala += f'<div class="{kelas}">{theme.esc(layout.romawi(kasus))}</div>'
         tinggi = max(0.0, min(1.0, item["cosine"])) * 120
@@ -83,7 +95,8 @@ def _lembar_laporan(state, dataset, pasien):
             f'<div class="scale">{skala}</div></div>'
             f'<div><p class="lbl">Tingkat kemiripan</p>'
             f'<div class="pct">{terbaik["persentase"]:.1f}%</div>'
-            f'<p class="mute" style="font-size:.85rem">dengan kasus {theme.esc(terbaik["kode"])}</p></div>'
+            f'<p class="mute" style="font-size:.85rem">dengan kasus {theme.esc(terbaik["kode"])}'
+            f' (dari {state.get("jumlah_basis", len(daftar))} kasus dalam basis)</p></div>'
         )
     else:
         utama = (
@@ -114,6 +127,107 @@ def _lembar_laporan(state, dataset, pasien):
     """
 
 
+def _kartu_revisi_retain(state, dataset):
+    """Tahap Revise (tinjau solusi) dan Retain (simpan ke basis kasus)."""
+
+    usulan = state.get("usulan")
+    if not usulan:
+        return
+
+    hasil_retain = state.get("retain")
+    revisi = state.get("revisi")
+
+    theme.html('<div style="height:16px"></div>')
+    with st.container(key="card_revisi"):
+        if usulan["grade"]:
+            teks_usulan = (
+                f'Usulan sistem (Reuse): <b>{theme.esc(usulan["grade"])}</b>, '
+                f'diambil dari kasus {theme.esc(usulan["kode_kasus"])}.'
+            )
+        else:
+            teks_usulan = (
+                "Sistem tidak menemukan kasus yang mirip, jadi belum ada usulan grade."
+            )
+        theme.html(
+            f"""
+            <div class="card-h"><h2>Tinjau dan simpan kasus</h2>
+            <p>{teks_usulan} Periksa apakah grade ini sudah tepat (Revise), lalu simpan
+            kasus ke basis kasus agar dipakai pada pemeriksaan berikutnya (Retain).
+            Yang disimpan hanya pola gejala dan grade, bukan identitas pasien.</p></div>
+            <div style="height:14px"></div>
+            """
+        )
+
+        if hasil_retain:
+            kasus = hasil_retain["kasus"]
+            if revisi and revisi["direvisi"]:
+                asal = (
+                    f'direvisi dari {theme.esc(revisi["grade_usulan"])}'
+                    if revisi["grade_usulan"]
+                    else "ditentukan manual"
+                )
+            else:
+                asal = "sesuai usulan sistem"
+            theme.html(
+                f'<div class="note" style="margin-top:0"><span>Solusi akhir: '
+                f'<b>{theme.esc(kasus["nama"])}</b> ({asal}).</span></div>'
+            )
+            if hasil_retain["status"] == "disimpan":
+                st.success(
+                    f"Kasus disimpan sebagai {kasus['kode']}. "
+                    "Kasus ini ikut dibandingkan pada pemeriksaan berikutnya."
+                )
+            else:
+                st.info(
+                    f"Pola gejala yang sama dengan grade ini sudah ada di basis kasus "
+                    f"({kasus['kode']}), jadi tidak disimpan ulang."
+                )
+            return
+
+        if usulan["perlu_ditinjau"]:
+            st.warning(
+                "Kemiripan rendah, hasil seri, atau tidak ada yang cocok. "
+                "Tinjau grade dengan teliti sebelum menyimpan."
+            )
+
+        opsi = list(dataset.nama_kasus)
+        indeks = opsi.index(usulan["grade"]) if usulan["grade"] in opsi else None
+        st.selectbox(
+            "Grade akhir",
+            options=opsi,
+            index=indeks,
+            key="revisi_grade",
+            placeholder="Pilih grade",
+        )
+        st.text_input(
+            "Catatan peninjau (opsional)",
+            key="revisi_catatan",
+            placeholder="Contoh: dikonfirmasi dokter",
+        )
+        ruang_galat = st.empty()
+        simpan = st.button(
+            "Simpan ke basis kasus",
+            key="btn_simpan_kasus",
+            type="primary",
+            icon=":material/save:",
+        )
+
+        if simpan:
+            try:
+                solusi = revise(
+                    usulan,
+                    st.session_state.get("revisi_grade"),
+                    opsi,
+                    st.session_state.get("revisi_catatan", ""),
+                )
+                state["retain"] = retain(dataset, state["kasusbaru"], solusi)
+                state["revisi"] = solusi
+                st.rerun()
+            except ValueError as error:
+                with ruang_galat:
+                    theme.galat(str(error))
+
+
 def render_hasil(state, dataset):
     if not state:
         _kosong()
@@ -124,6 +238,7 @@ def render_hasil(state, dataset):
     theme.html('<div class="page-top"></div>')
     with st.container(key="wrap920"):
         theme.html(_lembar_laporan(state, dataset, pasien))
+        _kartu_revisi_retain(state, dataset)
 
         with st.container(key="acts"):
             if st.button(
