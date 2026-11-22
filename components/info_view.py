@@ -38,7 +38,6 @@ REFERENSI_BIBTEX = r"""@article{Jatmiko2017,
 def render_tentang_ringkas():
     """Expander ringkas di halaman awal: identitas + referensi lengkap."""
 
-    theme.html('<div style="height:12px"></div>')
     with st.expander("Identitas aplikasi & referensi"):
         st.markdown(tabel_markdown(["Informasi", "Keterangan"], IDENTITAS), unsafe_allow_html=True)
 
@@ -58,7 +57,7 @@ def render_dataset(dataset):
         f"""
         <div class="page-top"></div>
         <h1 class="jd">Dataset kasus rujukan</h1>
-        <p class="mute" style="margin-top:8px;max-width:40em">{dataset.jumlah_kasus} kasus lama sebagai
+        <p class="page-sub">{dataset.jumlah_kasus} kasus lama sebagai
         pembanding. Titik terisi berarti gejala ada pada grade tersebut.</p>
         """
     )
@@ -99,13 +98,12 @@ def render_dataset(dataset):
 
     theme.html(
         f"""
-        <div class="card" style="background:#fff;border:1.5px solid var(--line);border-radius:28px;padding:8px">
+        <div class="mat-wrap">
         <div class="scroll"><table class="tbl mat"><thead><tr><th>Gejala</th>{kepala}</tr></thead>
         <tbody>{baris}</tbody>
         <tfoot><tr><td>Jumlah gejala</td>{total}</tr></tfoot></table></div></div>
-        <p class="mute" style="margin-top:14px;font-size:.88rem">Sumber: Jatmiko, Junaedi, dan Imrona (2017),
+        <p class="src">Sumber: Jatmiko, Junaedi, dan Imrona (2017),
         Tabel 2-1 sampai 2-3.</p>
-        <div class="page-bot"></div>
         """
     )
 

@@ -119,7 +119,6 @@ def render_identitas():
                     """
                     <div class="card-h"><h2>Data pasien</h2>
                     <p>Identitas hanya untuk melengkapi laporan dan tidak ikut dihitung.</p></div>
-                    <div style="height:22px"></div>
                     """
                 )
                 with st.form("form_identitas", clear_on_submit=False):
@@ -163,7 +162,6 @@ def render_identitas():
                     except ValueError as error:
                         with ruang_galat:
                             theme.galat(str(error))
-    theme.html('<div class="page-bot"></div>')
 
 
 def render_gejala(dataset):
@@ -228,7 +226,6 @@ def render_gejala(dataset):
                     )
                 ruang_galat = st.empty()
 
-    theme.html('<div class="page-bot"></div>')
 
     if kembali:
         st.session_state["langkah"] = "identitas"

@@ -54,7 +54,7 @@ def render(dataset):
     theme.html(
         f"""
         <section class="blok"><h2>Cara kerjanya</h2>
-        <p class="mute" style="margin:6px 0 20px">Tiga langkah, tanpa perlu memahami perhitungannya.</p>
+        <p class="sec-sub">Tiga langkah, tanpa perlu memahami perhitungannya.</p>
         <div class="g3">{kartu}</div></section>
         """
     )
@@ -69,11 +69,11 @@ def render(dataset):
         f"""
         <section class="blok"><div class="metode">
         <div><h2>Gejala diubah menjadi pola</h2>
-        <p class="mute" style="margin-top:8px">Setiap gejala bernilai 1 bila ada dan 0 bila tidak.
+        <p>Setiap gejala bernilai 1 bila ada dan 0 bila tidak.
         Pola pasien dibandingkan dengan pola tiap kasus rujukan memakai Cosine Similarity.
         Nilainya menunjukkan kemiripan kasus, bukan peluang pasti diagnosis.</p></div>
         <div><div class="bits" style="grid-template-columns:repeat({dataset.jumlah_atribut},1fr)">{bit}</div>
-        <p class="mute" style="font-size:.82rem;margin-top:10px">Contoh pola gejala kasus
+        <p class="bits-cap">Contoh pola gejala kasus
         {theme.esc(layout.label_grade(contoh))}. Kotak terang berarti gejala ada.</p></div>
         </div></section>
         """

@@ -30,7 +30,6 @@ def _kosong():
             """
             <div class="card-h"><h2>Hasil Pemeriksaan</h2>
             <p>Belum ada hasil pemeriksaan. Isi data diri dan pilih gejala terlebih dahulu.</p></div>
-            <div style="height:18px"></div>
             """
         )
         if st.button(
@@ -41,7 +40,6 @@ def _kosong():
         ):
             st.session_state["langkah"] = "identitas"
             st.rerun()
-    theme.html('<div class="page-bot"></div>')
 
 
 def _lembar_laporan(state, dataset, pasien):
@@ -91,18 +89,18 @@ def _lembar_laporan(state, dataset, pasien):
         utama = (
             f'<div><p class="lbl">Kasus paling mirip</p>'
             f'<div class="big">{theme.esc(layout.label_grade(kasus_t))}</div>'
-            f'<p style="margin-top:8px;font-weight:600;color:var(--deep-twilight)">{theme.esc(terbaik["nama"])}</p>'
+            f'<p class="grade-name">{theme.esc(terbaik["nama"])}</p>'
             f'<div class="scale">{skala}</div></div>'
             f'<div><p class="lbl">Tingkat kemiripan</p>'
             f'<div class="pct">{terbaik["persentase"]:.1f}%</div>'
-            f'<p class="mute" style="font-size:.85rem">dengan kasus {theme.esc(terbaik["kode"])}'
+            f'<p class="pct-note">dengan kasus {theme.esc(terbaik["kode"])}'
             f' (dari {state.get("jumlah_basis", len(daftar))} kasus dalam basis)</p></div>'
         )
     else:
         utama = (
             '<div><p class="lbl">Hasil</p>'
-            '<div class="big" style="font-size:clamp(1.8rem,6vw,2.6rem)">Belum ada grade yang cocok</div>'
-            '<p class="mute" style="margin-top:10px">Gejala ini tidak menyerupai kasus DHF mana pun. '
+            '<div class="big sm">Belum ada grade yang cocok</div>'
+            '<p class="nomatch">Gejala ini tidak menyerupai kasus DHF mana pun. '
             "Periksakan ke dokter bila keluhan berlanjut.</p></div>"
         )
 
@@ -137,7 +135,6 @@ def _kartu_revisi_retain(state, dataset):
     hasil_retain = state.get("retain")
     revisi = state.get("revisi")
 
-    theme.html('<div style="height:16px"></div>')
     with st.container(key="card_revisi"):
         if usulan["grade"]:
             teks_usulan = (
@@ -154,7 +151,6 @@ def _kartu_revisi_retain(state, dataset):
             <p>{teks_usulan} Periksa apakah grade ini sudah tepat (Revise), lalu simpan
             kasus ke basis kasus agar dipakai pada pemeriksaan berikutnya (Retain).
             Yang disimpan hanya pola gejala dan grade, bukan identitas pasien.</p></div>
-            <div style="height:14px"></div>
             """
         )
 
@@ -169,7 +165,7 @@ def _kartu_revisi_retain(state, dataset):
             else:
                 asal = "sesuai usulan sistem"
             theme.html(
-                f'<div class="note" style="margin-top:0"><span>Solusi akhir: '
+                f'<div class="note flat"><span>Solusi akhir: '
                 f'<b>{theme.esc(kasus["nama"])}</b> ({asal}).</span></div>'
             )
             if hasil_retain["status"] == "disimpan":
@@ -258,4 +254,3 @@ def render_hasil(state, dataset):
 
                 reset_state(dataset)
                 st.rerun()
-    theme.html('<div class="page-bot"></div>')

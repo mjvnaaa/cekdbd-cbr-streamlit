@@ -46,3 +46,9 @@ elif langkah == "dataset":
     info_view.render_dataset(DHF)
 
 layout.footer()
+
+# Setiap berpindah langkah (mis. "Lihat hasil"), halaman dikembalikan ke atas
+# agar pengguna langsung melihat isi halaman baru, bukan posisi gulir sebelumnya.
+if st.session_state.get("_langkah_tampil") != langkah:
+    st.session_state["_langkah_tampil"] = langkah
+    theme.gulir_ke_atas()
